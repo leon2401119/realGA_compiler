@@ -38,7 +38,7 @@ class Chromosome
         double getMaxFitness () const;
 
     protected:
-        bool *gene;
+        int *gene;
         int length;
         double fitness;
         bool evaluated;

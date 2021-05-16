@@ -35,7 +35,7 @@ void Chromosome::init (int n_length)
     if (gene != NULL)
         delete[]gene;
 
-    gene = new bool[length];
+    gene = new int[length];
     evaluated = false;
 }
 
@@ -44,7 +44,7 @@ int Chromosome::getVal (int index) const
     if (index < 0 || index > length)
         outputErrMsg ("Index overrange in Chromosome::operator[]");
 
-    return (gene[index])? 1:0;
+    return gene[index];
 }
 
 
@@ -53,7 +53,7 @@ void Chromosome::setVal (int index, int val)
     if (index < 0 || index > length)
         outputErrMsg ("Index overrange in Chromosome::operator[]");
 
-    gene[index] = (val==1)? true:false;
+    gene[index] = val;
     evaluated = false;
 }
 
