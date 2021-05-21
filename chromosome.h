@@ -29,6 +29,8 @@ class Chromosome
 
         double oneMax () const;
 
+        double eval_flag() const;
+
         bool isEvaluated () const;
 
         void printf () const;
