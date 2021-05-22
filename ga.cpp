@@ -286,7 +286,7 @@ void GA::flatXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, 
         c2.setVal (i, myRand.uniform(p1.getVal(i), p2.getVal(i)));
     }
 }
-void GA::BLX-XO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
+void GA::BLXXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
 {
     float cmin,cmax,I;
     for (int i = 0; i < ell; i++) {
@@ -297,7 +297,7 @@ void GA::BLX-XO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, 
         c2.setVal (i, myRand.uniform(cmin-0.5*I, cmax+0.5*I));
     }
 }
-void GA::SPX-XO (Vector<int>parentList, Chromosome & c1, Chromosome & c2)
+/*void GA::SPX-XO (Vector<int>parentList, Chromosome & c1, Chromosome & c2)
 {
     float cmin,cmax,I;
     for (int i = 0; i < ell; i++) {
@@ -307,7 +307,7 @@ void GA::SPX-XO (Vector<int>parentList, Chromosome & c1, Chromosome & c2)
         c1.setVal (i, myRand.uniform(cmin-0.5*I, cmax+0.5*I));
         c2.setVal (i, myRand.uniform(cmin-0.5*I, cmax+0.5*I));
     }
-}
+}*/
 void GA::mutation ()
 {
     //simpleMutation ();
