@@ -39,6 +39,11 @@ class GA
 	void onePointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         void uniformXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &, double);
 
+         void arithmaticalXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+        void extendedXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+        void flatXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+        void BLXXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+        //void SPXXO (Vector<int>parentList, Chromosome &, Chromosome &);
         void mutation ();
         void simpleMutation ();
 	void mutationClock ();
