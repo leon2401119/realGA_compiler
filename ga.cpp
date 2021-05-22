@@ -11,7 +11,7 @@
 #include "statistics.h"
 #include "myrand.h"
 #include "ga.h"
-
+#include <vector>
 GA::GA ()
 {
     ell = 0;
@@ -240,7 +240,30 @@ void GA::onePointXO (const Chromosome & p1, const Chromosome & p2, Chromosome & 
             c2.setVal (i, p1.getVal(i));
     }
 }
-
+void GA::arithmaticalXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
+{
+    
+    double alpha = myRand.uniform();
+    for (int i = 0; i < ell; i++) {
+        c1.setVal (i, alpha*p1.getVal(i)+(1-alpha)*p2.getVal(i));
+    }
+    alpha = myRand.uniform();
+    for (int i = 0; i < ell; i++) {
+        c2.setVal (i, alpha*p1.getVal(i)+(1-alpha)*p2.getVal(i));
+    }
+}
+void GA::extendedXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
+{
+    
+    double alpha = myRand.uniform(-0.25,1.25);
+    for (int i = 0; i < ell; i++) {
+        c1.setVal (i, alpha*p1.getVal(i)+(1-alpha)*p2.getVal(i));
+    }
+    alpha = myRand.uniform(-0.25,1.25);
+    for (int i = 0; i < ell; i++) {
+        c2.setVal (i, alpha*p1.getVal(i)+(1-alpha)*p2.getVal(i));
+    }
+}
 void GA::uniformXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2, double prob)
 {
     int i;
@@ -256,7 +279,35 @@ void GA::uniformXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c
         }
     }
 }
-
+void GA::flatXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
+{
+    for (int i = 0; i < ell; i++) {
+        c1.setVal (i, myRand.uniform(p1.getVal(i), p2.getVal(i)));
+        c2.setVal (i, myRand.uniform(p1.getVal(i), p2.getVal(i)));
+    }
+}
+void GA::BLXXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
+{
+    float cmin,cmax,I;
+    for (int i = 0; i < ell; i++) {
+        cmin=(p1.getVal(i) < p2.getVal(i))?p1.getVal(i): p2.getVal(i);
+        cmax=(p1.getVal(i) > p2.getVal(i))?p1.getVal(i): p2.getVal(i);
+        I=cmax-cmin;
+        c1.setVal (i, myRand.uniform(cmin-0.5*I, cmax+0.5*I));
+        c2.setVal (i, myRand.uniform(cmin-0.5*I, cmax+0.5*I));
+    }
+}
+/*void GA::SPX-XO (Vector<int>parentList, Chromosome & c1, Chromosome & c2)
+{
+    float cmin,cmax,I;
+    for (int i = 0; i < ell; i++) {
+        cmin=(p1.getVal(i) < p2.getVal(i))?p1.getVal(i): p2.getVal(i);
+        cmax=(p1.getVal(i) > p2.getVal(i))?p1.getVal(i): p2.getVal(i);
+        I=cmax-cmin;
+        c1.setVal (i, myRand.uniform(cmin-0.5*I, cmax+0.5*I));
+        c2.setVal (i, myRand.uniform(cmin-0.5*I, cmax+0.5*I));
+    }
+}*/
 void GA::mutation ()
 {
     //simpleMutation ();
