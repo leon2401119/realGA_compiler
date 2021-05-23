@@ -12,6 +12,9 @@
 #include "myrand.h"
 #include "ga.h"
 #include <vector>
+
+extern int num_of_flags;
+
 GA::GA ()
 {
     ell = 0;
@@ -80,10 +83,7 @@ void GA::initializePopulation ()
 
     for (i = 0; i < nInitial; i++)
         for (j = 0; j < ell; j++)
-            if (myRand.uniform () > p)
-                population[i].setVal (j, 1);
-            else
-                population[i].setVal (j, 0);
+            population[i].setVal (j, myRand.uniformInt(0, num_of_flags-1));
 
 }
 
@@ -178,7 +178,7 @@ void GA::tournamentSelection ()
             int challenger = randArray[selectionPressure * i + j];
             double challengerFitness = population[challenger].getFitness ();
 
-            if (challengerFitness > winnerFitness) {
+            if (challengerFitness < winnerFitness) {
                 winner = challenger;
                 winnerFitness = challengerFitness;
             }
@@ -216,8 +216,9 @@ void GA::crossover ()
 void GA::pairwiseXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
 {
     if (myRand.uniform () < pc) {
-	onePointXO (p1, p2, c1, c2);
-//      uniformXO (p1, p2, c1, c2, 0.5);
+    flatXO(p1, p2, c1, c2);
+	//onePointXO (p1, p2, c1, c2);
+    //uniformXO (p1, p2, c1, c2, 0.5);
     }
     else {
         c1 = p1;
@@ -353,7 +354,7 @@ void GA::showStatistics ()
     printf ("Gen:%d  Fitness:(Max/Mean/Min):%f/%f/%f Chromsome Length:%d\n",
         generation, stFitness.getMax (), stFitness.getMean (),
         stFitness.getMin (), population[0].getLength ());
-    printf ("best chromosome:");
+    printf ("best sequence:");
     population[bestIndex].printf ();
     printf ("\n");
 }
@@ -430,8 +431,8 @@ bool GA::shouldTerminate ()
     }
 
     // Found a satisfactory solution
-    if (stFitness.getMax() >= population[0].getMaxFitness())
-        termination = true;
+    /*if (stFitness.getMax() >= population[0].getMaxFitness())
+        termination = true;*/
 
     // The population loses diversity
     if (stFitness.getMax()-1e-6 < stFitness.getMean())

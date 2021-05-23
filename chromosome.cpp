@@ -16,57 +16,57 @@ string target_src = target_file + ".ll";
 string target_opt = target_file + "_opt.ll";
 string target_bin = target_file + "_opt.o";
 
-int num_of_flags = 90;  // 89 actual passes, 1 empty pass = 0
+int num_of_flags = 90 - 13;  // 89 actual passes, 1 empty pass = 0, 13 passes unknown to opt
 string llvm_pass[] = {
     /* analysis passes */
     "aa-eval",
-    "basic-aa",
+    "basicaa",
     "basiccg",
-    "count-aa",
+    //"count-aa",
     "da",
-    "debug-aa",
+    "debugify",
     "domfrontier",
     "domtree",
-    "dot-callgraph",
-    "dot-cfg",
-    "dot-cfg-only",
-    "dot-dom",
-    "dot-dom-only",
-    "dot-postdom",
-    "dot-postdom-only",
-    "globalsmodref-aa",
+    //"dot-callgraph",
+    //"dot-cfg",
+    //"dot-cfg-only",
+    //"dot-dom",
+    //"dot-dom-only",
+    //"dot-postdom",
+    //"dot-postdom-only",
+    "globals-aa",
     "instcount",
     "intervals",
     "iv-users",
     "lazy-value-info",
-    "libcall-aa",
+    //"libcall-aa",
     "lint",
     "loops",
     "memdep",
     "module-debuginfo",
-    "postdomfrontier",
+    //"postdomfrontier",
     "postdomtree",      // several print analysis passes omitted
     "regions",
     "scalar-evolution",
     "scev-aa",
     "stack-safety",
-    "targetdata",
+    "target-abi",
 
     /* transformation passes */
-    "acde",
+    "adce",
     "always-inline",
     "argpromotion",
-    "bb-vectorize",
-    "block-placement",
+    //"bb-vectorize",
+    "stack-alignment",
     "break-crit-edges",
     "codegenprepare",
     "constmerge",
     "dce",
     "deadargelim",
-    "deadtypeelim",
+    //"deadtypeelim",
     "die",
     "dse",
-    "function-attrs",
+    "functionattrs",
     "globaldce",
     "globalopt",
     "gvn",
@@ -98,7 +98,7 @@ string llvm_pass[] = {
     "partial-inliner",
     "prune-eh",
     "reassociate",
-    "rel-lookup-table-converter",
+    //"rel-lookup-table-converter",
     "reg2mem",
     "sroa",
     "sccp",
@@ -182,7 +182,7 @@ bool Chromosome::isEvaluated () const
 double Chromosome::evaluate ()
 {
     evaluated = true;
-    return oneMax ();
+    return eval_flag();
 }
 
 
@@ -224,49 +224,50 @@ double Chromosome::eval_flag() const
 
     // opt
     string cmd = "opt -S";
-    for(int i=0;i<num_of_flags;i++){
+    for(int i=0;i<length;i++){
         if(gene[i])
             cmd += (" -"+llvm_pass[gene[i]-1]);
     }
-    cmd += (target_src);
-    cmd += ("-o "+target_opt);
+    cmd += (" " + target_src);
+    cmd += (" -o "+target_opt);
+    cout << cmd << endl;
     out = bash_exec(cmd,true);
-    if(out){
+    /*if(out){
         std::printf("optimization fail\n");
         std::printf("%s",out);
         exit(0);
-    }
+    }*/
 
     // compile to obj file
     cmd = "llc --filetype=obj ";
     cmd += (target_opt);
-    cmd += ("-o "+target_bin);
-    out = bash_exec(cmd,true);
-    if(out){
+    cmd += (" -o "+target_bin);
+    out = bash_exec(cmd,false);
+    /*if(out){
         std::printf("compilation fail\n");
         std::printf("%s",out);
         exit(0);
-    }
+    }*/
 
     // link
     cmd = "clang++ ";
     cmd += (target_bin);
-    cmd += ("-o "+target_file);
-    out = bash_exec(cmd,true);
-    if(out){
+    cmd += (" -o "+target_file);
+    out = bash_exec(cmd,false);
+    /*if(out){
         std::printf("linking fail\n");
         std::printf("%s",out);
         exit(0);
-    }
+    }*/
 
     // exec & measure
-    cmd = "usr/bin/time --format \"%S %U\" ";
-    cmd += (target_file);
+    cmd = "/usr/bin/time --format \"%S %U\" ";
+    cmd += ("./"+target_file);
     cmd += ">/dev/null";
 
 
     /* TODO : adaptive repeat? longer single experiment time = less noisy = less repeated times */
-    int repeat = 1000;
+    int repeat = 3;
     for(int i=0;i<repeat;i++){
         out = bash_exec(cmd,true);
         if(!out){
@@ -304,8 +305,10 @@ Chromosome & Chromosome::operator= (const Chromosome & c)
 void Chromosome::printf () const
 {
     int i;
-    for (i = 0; i < length; i++)
-        ::printf ("%d", gene[i]);
+    for (i = 0; i < length; i++){
+        if(gene[i])
+            cout<<"--"<<llvm_pass[gene[i]-1]<<" ";
+    }
 }
 
 

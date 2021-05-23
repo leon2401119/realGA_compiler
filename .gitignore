@@ -1,2 +1,5 @@
 *.out
+*.dot
+test_program*
+
 
