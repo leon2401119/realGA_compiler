@@ -11,7 +11,7 @@
 #include "statistics.h"
 #include "myrand.h"
 #include "ga.h"
-#include <vector>
+
 GA::GA ()
 {
     ell = 0;
@@ -297,17 +297,23 @@ void GA::BLXXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, C
         c2.setVal (i, myRand.uniform(cmin-0.5*I, cmax+0.5*I));
     }
 }
-/*void GA::SPX-XO (Vector<int>parentList, Chromosome & c1, Chromosome & c2)
+void GA::SPXXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
 {
-    float cmin,cmax,I;
+    double r=0.0;
+    int epsilon=sqrt(ell+2);
+    for (int i = 0; i < ell; i++)
+    {
+        r+=pow(p1.getVal(i)-p2.getVal(i),2)
+    }
+    r=sqrt(r);
     for (int i = 0; i < ell; i++) {
         cmin=(p1.getVal(i) < p2.getVal(i))?p1.getVal(i): p2.getVal(i);
         cmax=(p1.getVal(i) > p2.getVal(i))?p1.getVal(i): p2.getVal(i);
-        I=cmax-cmin;
-        c1.setVal (i, myRand.uniform(cmin-0.5*I, cmax+0.5*I));
-        c2.setVal (i, myRand.uniform(cmin-0.5*I, cmax+0.5*I));
+        c1.setVal (i, myRand.uniform(cmin-epsilon*r, cmax+epsilon*r));
+        c2.setVal (i, myRand.uniform(cmin-epsilon*r, cmax+epsilon*r));
     }
-}*/
+    
+}
 void GA::mutation ()
 {
     //simpleMutation ();
