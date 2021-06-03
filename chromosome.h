@@ -22,14 +22,14 @@ class Chromosome
         int getVal (int index) const;
         void setVal (int index, int val);
 
-        double getFitness ();
+        double getFitness (int worker_id = 1, int repeat = 1);
 
         /** real evaluator */
-        double evaluate ();
+        double evaluate (int worker_id, int repeat);
 
         double oneMax () const;
 
-        double eval_flag() const;
+        double eval_flag(int worker_id, int repeat) const;
 
         bool isEvaluated () const;
 

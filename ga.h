@@ -26,6 +26,7 @@ class GA
         void initializePopulation ();
         void evaluate ();
 
+        void getAllFitness();
         void selection ();
 
         /** tournament selection without replacement */

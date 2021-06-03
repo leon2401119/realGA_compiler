@@ -12,8 +12,13 @@
 #include "myrand.h"
 #include "ga.h"
 #include <vector>
+#include <pthread.h>
 
 extern int num_of_flags;
+extern double base_exec_time;
+
+void* runner(void*);
+
 
 GA::GA ()
 {
@@ -63,6 +68,16 @@ double n_pm, int n_maxGen, int n_maxFe)
     maxGen = n_maxGen;
     maxFe = n_maxFe;
 
+    // measure base exec time
+    Chromosome *base = new Chromosome;
+    base->init(ell);
+    for(int i=0;i<ell;i++)
+        base->setVal(i,0);  // empty pass
+
+    base_exec_time = 0;
+    base_exec_time = base->getFitness(1,5);
+    delete base;
+
     population = new Chromosome[nInitial];
     offspring = new Chromosome[nInitial];
     selectionIndex = new int[nInitial];
@@ -86,6 +101,53 @@ void GA::initializePopulation ()
             population[i].setVal (j, myRand.uniformInt(0, num_of_flags-1));
 
 }
+
+struct args4thread{
+    Chromosome* c;
+    int worker_id;
+};
+
+void* runner(void* arg){
+    Chromosome* c = ((args4thread*)arg)->c;
+    int worker_id = ((args4thread*)arg)->worker_id;
+    c->getFitness(worker_id);
+    return NULL;
+}
+
+void GA::getAllFitness(){
+    int num_workers = 6;
+    pthread_t* workers = new pthread_t[num_workers];
+
+    /* create placeholder for args to pass into thread */
+    args4thread* args = new args4thread[num_workers];
+    for(int i=0;i<num_workers;i++){
+        args[i].c = NULL;
+        args[i].worker_id = i+1;
+    }
+
+    for(int i=0;i<nCurrent/num_workers;i++){
+        for(int j=0;j<num_workers;j++){
+            //printf("%d\n",i*num_workers+j);
+            if(!((i*num_workers+j)%(nCurrent/10)))
+                printf("\tevaluated %d%%\n", (int)(100.0*(i*num_workers+j)/nCurrent));
+            /* fill placeholder */
+            args[j].c = &population[i*num_workers+j];
+            pthread_create(&(workers[j]),NULL,&runner,(void*)&(args[j]));
+        }
+        for(int j=0;j<num_workers;j++)
+            pthread_join(workers[j],NULL);
+    }
+    for(int i=0;i<nCurrent%num_workers;i++){
+        args[i].c = &population[nCurrent-1-i];
+        pthread_create(&(workers[i]),NULL,&runner,(void*)&(args[i]));
+    }
+    for(int i=0;i<nCurrent%num_workers;i++)
+        pthread_join(workers[i],NULL);
+
+    delete []workers;
+    delete []args;
+}
+
 
 // For now, assuming fixed population size
 int GA::getNextPopulation ()
@@ -178,7 +240,7 @@ void GA::tournamentSelection ()
             int challenger = randArray[selectionPressure * i + j];
             double challengerFitness = population[challenger].getFitness ();
 
-            if (challengerFitness < winnerFitness) {
+            if (challengerFitness > winnerFitness) {
                 winner = challenger;
                 winnerFitness = challengerFitness;
             }
@@ -355,7 +417,9 @@ void GA::showStatistics ()
         generation, stFitness.getMax (), stFitness.getMean (),
         stFitness.getMin (), population[0].getLength ());
     printf ("best sequence:");
+    //printf("\n\n%d\n\n", bestIndex);
     population[bestIndex].printf ();
+    printf("\nbest fitness: %f", population[bestIndex].getFitness());
     printf ("\n");
 }
 
@@ -380,10 +444,18 @@ void GA::oneRun (bool output)
 {
     int i;
 
+    printf("----------- Generation %d -----------\n", generation);
+    printf("Selecting...\n");
     selection ();
+    printf("Mating...\n");
     crossover ();
+    printf("Alienizing...\n");
     mutation ();
+    printf("Repopulating...\n");
     replacePopulation ();
+
+    printf("Evaluating generation...\n");
+    getAllFitness();
 
     double max = -DBL_MAX;
     stFitness.reset ();
@@ -406,6 +478,9 @@ void GA::oneRun (bool output)
 int GA::doIt (bool output)
 {
     generation = 0;
+
+    printf("----------- Initialization %d -----------\n", generation);
+    getAllFitness();
 
     while (!shouldTerminate ()) {
         oneRun (output);
