@@ -332,7 +332,35 @@ void GA::simpleMutation ()
                 offspring[i].setVal(j, 1-val);
             }
 }
+void GA::randomMutation ()
+{
+     if (pm <= 1e-6) return; // can't deal with too small pm
 
+    int pointer = (int) (log(1-myRand.uniform()) / log(1-pm) + 1);
+
+    while (pointer < nNextGeneration * ell) {
+
+	int q = pointer / ell;
+	int r = pointer % ell;
+
+       // 選擇flag的範圍
+       int random_num=myRand.uniformInt(1,100);
+        offspring[q].setVal(r, random_num);
+
+	// Compute next mutation clock
+	pointer += (int) (log(1-myRand.uniform()) / log(1-pm) + 1);
+    };
+}
+void GA::randomMutation2.0 ()
+{
+    if (myRand.flip(pm)) {
+        //選擇染色體(在array內)
+    int random_chromosome=myRand.uniformInt(0,nNextGeneration-1);
+    int random_gene=myRand.uniformInt(0,ell-1);//選擇bit位置
+    int random_number=myRand.uniformInt(1,100);//隨機選擇一個flag
+    offspring[random_chromosome].setVal(random_gene, random_number);
+            }
+}
 void GA::mutationClock ()
 {
     if (pm <= 1e-6) return; // can't deal with too small pm
