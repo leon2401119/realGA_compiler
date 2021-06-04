@@ -431,19 +431,19 @@ double Chromosome::eval_flag(int worker_id, int repeat) const
     char* out;
 
     // opt
-    string cmd = "opt -S";
+    string cmd = "{ opt-10 -S";
     for(int i=0;i<length;i++){
         if(gene[i])
             cmd += (" -"+llvm_pass[gene[i]-1]);
     }
     cmd += (" " + target_src);
-    cmd += (" -o w"+ to_string(worker_id) + target_opt);
+    cmd += (" -o w"+ to_string(worker_id) + target_opt + "; }");
     cmd += (" 2>&1");
     // cout << "\n\n" << cmd << "\n\n" << endl;
     out = bash_exec(cmd,true);
     if(strlen(out)){
-        // std::printf("optimization fail\n");
-        // std::printf("%s",out);
+        //std::printf("optimization fail\n");
+        //std::printf("%s",out);
         // exit(0);
         delete[] out;
         return 0;
@@ -451,9 +451,9 @@ double Chromosome::eval_flag(int worker_id, int repeat) const
     delete[] out;
 
     // compile to obj file
-    cmd = "llc --filetype=obj ";
+    cmd = "{ llc-10 --filetype=obj ";
     cmd += ("w" + to_string(worker_id) + target_opt);
-    cmd += (" -o w" + to_string(worker_id) + target_bin);
+    cmd += (" -o w" + to_string(worker_id) + target_bin + "; }");
     cmd += (" 2>&1");
     out = bash_exec(cmd,true);
     if(strlen(out)){
@@ -466,9 +466,9 @@ double Chromosome::eval_flag(int worker_id, int repeat) const
     delete[] out;
 
     // link
-    cmd = "clang++ ";
+    cmd = "{ clang++-10 ";
     cmd += ("w" + to_string(worker_id) + target_bin);
-    cmd += (" -o w" + to_string(worker_id) + target_file);
+    cmd += (" -o w" + to_string(worker_id) + target_file + "; }");
     cmd += (" 2>&1");
     out = bash_exec(cmd,true);
     if(strlen(out)){
@@ -481,9 +481,9 @@ double Chromosome::eval_flag(int worker_id, int repeat) const
     delete[] out;
 
     // exec & measure
-    cmd = "/usr/bin/time 2>&1 --format \"%S %U\" ";
+    cmd = "{ /usr/bin/time 2>&1 --format \"%S %U\" ";
     cmd += ("./w"+ to_string(worker_id) + target_file);
-    cmd += ">/dev/null";
+    cmd += ">/dev/null; }";
     /*cmd = "ls -l ";
     cmd += ("./"+target_file);*/
 
