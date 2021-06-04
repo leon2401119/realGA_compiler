@@ -128,23 +128,23 @@ void GA::getAllFitness(){
 
     for(int i=0;i<nCurrent/num_workers;i++){
         for(int j=0;j<num_workers;j++){
-            //printf("%d\n",i*num_workers+j);
-            if(!((i*num_workers+j)%(nCurrent/100))){
-                printf("\r\tevaluated %d%%", (int)(100.0*(i*num_workers+j)/nCurrent));
-                fflush(NULL);
-            }
             /* fill placeholder */
             args[j].c = &population[i*num_workers+j];
             pthread_create(&(workers[j]),NULL,&runner,(void*)&(args[j]));
         }
-        for(int j=0;j<num_workers;j++)
+        for(int j=0;j<num_workers;j++){
+            if(!((i*num_workers+j)%(nCurrent/100))){
+                printf("\rEvaluating generation... %d%%", (int)(100.0*(i*num_workers+j)/nCurrent));
+                fflush(NULL);
+            }
             pthread_join(workers[j],NULL);
+        }
     }
     for(int i=0;i<nCurrent%num_workers;i++){
         args[i].c = &population[nCurrent-1-i];
         pthread_create(&(workers[i]),NULL,&runner,(void*)&(args[i]));
     }
-    printf("\r\tevaluated 100%%\n");
+    printf("\rEvaluating generation... 100%%\n");
     for(int i=0;i<nCurrent%num_workers;i++)
         pthread_join(workers[i],NULL);
 
@@ -460,7 +460,6 @@ void GA::oneRun (bool output)
     printf("Repopulating...\n");
     replacePopulation ();
 
-    printf("Evaluating generation...\n");
     getAllFitness();
 
     double max = -DBL_MAX;
@@ -493,6 +492,7 @@ int GA::doIt (bool output)
 
     printf("----------- Initialization -----------\n");
     getAllFitness();
+    printf("\n\n");
 
     while (!shouldTerminate ()) {
         oneRun (output);
