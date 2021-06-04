@@ -13,10 +13,10 @@
 
 using namespace std;
 
-string target_file = "test_program";
-string target_src = target_file + ".ll";
-string target_opt = target_file + "_opt.ll";
-string target_bin = target_file + "_opt.o";
+extern string target_file;
+extern string target_src;
+extern string target_opt;
+extern string target_bin;
 double base_exec_time;
 
 int num_of_flags = 272;

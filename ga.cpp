@@ -76,7 +76,10 @@ double n_pm, int n_maxGen, int n_maxFe)
         base->setVal(i,0);  // empty pass
 
     base_exec_time = 0;
+    printf("Measuring base performance... \n");
+    fflush(NULL);
     base_exec_time = base->getFitness(1,5);
+    printf("\nDONE!\n\n");
     delete base;
 
     population = new Chromosome[nInitial];
