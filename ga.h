@@ -79,6 +79,8 @@ class GA
         int fe;
         int generation;
         int bestIndex;
+        int infeasible;
+        double elapsed;
 
 };
 #endif

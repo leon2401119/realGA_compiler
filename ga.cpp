@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <float.h>
 #include <math.h>
+#include <time.h>
 #include "global.h"
 #include "statistics.h"
 #include "myrand.h"
@@ -115,7 +116,7 @@ void* runner(void* arg){
 }
 
 void GA::getAllFitness(){
-    int num_workers = 6;
+    int num_workers = 10;
     pthread_t* workers = new pthread_t[num_workers];
 
     /* create placeholder for args to pass into thread */
@@ -128,8 +129,10 @@ void GA::getAllFitness(){
     for(int i=0;i<nCurrent/num_workers;i++){
         for(int j=0;j<num_workers;j++){
             //printf("%d\n",i*num_workers+j);
-            if(!((i*num_workers+j)%(nCurrent/10)))
-                printf("\tevaluated %d%%\n", (int)(100.0*(i*num_workers+j)/nCurrent));
+            if(!((i*num_workers+j)%(nCurrent/100))){
+                printf("\r\tevaluated %d%%", (int)(100.0*(i*num_workers+j)/nCurrent));
+                fflush(NULL);
+            }
             /* fill placeholder */
             args[j].c = &population[i*num_workers+j];
             pthread_create(&(workers[j]),NULL,&runner,(void*)&(args[j]));
@@ -141,6 +144,7 @@ void GA::getAllFitness(){
         args[i].c = &population[nCurrent-1-i];
         pthread_create(&(workers[i]),NULL,&runner,(void*)&(args[i]));
     }
+    printf("\r\tevaluated 100%%\n");
     for(int i=0;i<nCurrent%num_workers;i++)
         pthread_join(workers[i],NULL);
 
@@ -412,15 +416,14 @@ void GA::mutationClock ()
 
 void GA::showStatistics ()
 {
-
-    printf ("Gen:%d  Fitness:(Max/Mean/Min):%f/%f/%f Chromsome Length:%d\n",
-        generation, stFitness.getMax (), stFitness.getMean (),
-        stFitness.getMin (), population[0].getLength ());
-    printf ("best sequence:");
+    printf ("\nSummary:\n\tFitness:(Max/Mean/Min): %.5f/%.5f/%.5f \n\tChromsome Length: %d\n\tInfeasible%%: %d%%\n\tElapsed time: %.2f seconds\n",
+        stFitness.getMax (), stFitness.getMean (),
+        stFitness.getMin (), population[0].getLength (), 100*infeasible/nCurrent, elapsed);
+    printf("\nBest fitness: %.3f", population[bestIndex].getFitness());
+    printf ("\nBest sequence: ");
     //printf("\n\n%d\n\n", bestIndex);
     population[bestIndex].printf ();
-    printf("\nbest fitness: %f", population[bestIndex].getFitness());
-    printf ("\n");
+    printf ("\n\n\n");
 }
 
 
@@ -443,6 +446,9 @@ void GA::replacePopulation ()
 void GA::oneRun (bool output)
 {
     int i;
+    infeasible = 0;
+    time_t start,end;
+    time(&start);
 
     printf("----------- Generation %d -----------\n", generation);
     printf("Selecting...\n");
@@ -465,8 +471,14 @@ void GA::oneRun (bool output)
             max = fitness;
             bestIndex = i;
         }
+        infeasible += (!fitness)?1:0;
         stFitness.record (fitness);
     }
+
+    time(&end);
+
+    elapsed = difftime(end,start);
+    // printf("Elapsed time: %.2f seconds\n", difftime(end,start));
 
     if (output)
         showStatistics ();
@@ -479,7 +491,7 @@ int GA::doIt (bool output)
 {
     generation = 0;
 
-    printf("----------- Initialization %d -----------\n", generation);
+    printf("----------- Initialization -----------\n");
     getAllFitness();
 
     while (!shouldTerminate ()) {

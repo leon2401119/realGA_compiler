@@ -446,7 +446,7 @@ double Chromosome::eval_flag(int worker_id, int repeat) const
         // std::printf("%s",out);
         // exit(0);
         delete[] out;
-        return -DBL_MAX;
+        return 0;
     }
     delete[] out;
 
@@ -461,7 +461,7 @@ double Chromosome::eval_flag(int worker_id, int repeat) const
         // std::printf("%s",out);
         // exit(0);
         delete[] out;
-        return -DBL_MAX;
+        return 0;
     }
     delete[] out;
 
@@ -476,7 +476,7 @@ double Chromosome::eval_flag(int worker_id, int repeat) const
         // std::printf("%s",out);
         // exit(0);
         delete[] out;
-        return -DBL_MAX;
+        return 0;
     }
     delete[] out;
 
