@@ -306,12 +306,37 @@ void GA::SPXXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, C
         r+=pow(p1.getVal(i)-p2.getVal(i),2)
     }
     r=sqrt(r);
+    float cmin=0.0,cmax=0.0;
     for (int i = 0; i < ell; i++) {
         cmin=(p1.getVal(i) < p2.getVal(i))?p1.getVal(i): p2.getVal(i);
         cmax=(p1.getVal(i) > p2.getVal(i))?p1.getVal(i): p2.getVal(i);
         c1.setVal (i, myRand.uniform(cmin-epsilon*r, cmax+epsilon*r));
         c2.setVal (i, myRand.uniform(cmin-epsilon*r, cmax+epsilon*r));
     }
+    
+}
+int GA::isPrime(int n){
+    for (int i = 2; i <=sqrt(n); i++)
+    {
+        if(n%i==0){
+            return 0;
+        }
+    }
+    return 1;
+}
+void GA::primeXO(const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2){
+    for (int i = 0; i < ell; i++)
+    {
+        if(isPrime(i)){
+             c1.setVal (i, p2.getVal(i));
+            c2.setVal (i, p1.getVal(i));
+         }else{
+            c1.setVal (i, p1.getVal(i));
+            c2.setVal (i, p2.getVal(i));
+         }       
+
+    }
+    
     
 }
 void GA::mutation ()
