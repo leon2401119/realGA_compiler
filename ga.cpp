@@ -20,9 +20,12 @@
 extern int num_of_flags;
 extern std::string llvm_pass[];
 extern double base_exec_time;
+extern double O3_exec_time;
+extern std::string target_cpp;
 
 void* runner(void*);
-
+double str2double(char*);
+char* bash_exec(std::string, bool);
 
 GA::GA ()
 {
@@ -72,16 +75,10 @@ double n_pm, int n_maxGen, int n_maxFe)
     maxGen = n_maxGen;
     maxFe = n_maxFe;
 
-    // measure base exec time
     Chromosome *base = new Chromosome;
     base->init(ell);
     for(int i=0;i<ell;i++)
         base->setVal(i,0);  // empty pass
-
-    base_exec_time = 0;
-    printf("Measuring base performance... \n");
-    fflush(NULL);
-    base_exec_time = base->getFitness(1,5);
 
     /* test the flags one by one and eliminate infeasible ones */
     FILE* p;
@@ -89,8 +86,32 @@ double n_pm, int n_maxGen, int n_maxFe)
     p = fopen ("invalid_indexes","r");
     temp = p? restore_flags(p):test_flags(p,base);
     num_of_flags -= temp;
-    delete base;
     /* end test */
+
+    // measure comparative exec time
+    int star_repeat = 10;
+
+    base_exec_time = 0;
+    printf("Measuring performance... \n");
+    fflush(NULL);
+    base->setVal(0,0);
+    base_exec_time = base->getFitness(1,star_repeat);
+    delete base;
+
+    /* test O3 */
+    char *out;
+    O3_exec_time = 0;
+    std::string cmd = "clang++ -O3 ";
+    cmd += target_cpp;
+    cmd += " -o O3 && /usr/bin/time 2>&1 --format \"%S %U\" ./O3 >/dev/null";
+    for(int i=0;i<star_repeat;i++){
+        out = bash_exec(cmd,true);
+        O3_exec_time += (str2double(out) + str2double(out+5));
+        delete[] out;
+    }
+    O3_exec_time/=star_repeat;
+    printf("\tBase:%.2fs\n",base_exec_time);
+    printf("\tO3:%.2fs  (Speedup = %.2fx)\n",O3_exec_time,base_exec_time/O3_exec_time);
 
     printf("\nDONE!\n\n");
 
@@ -145,12 +166,12 @@ int GA::restore_flags(FILE* p){
     fclose(p);
 
     tmp = forbidden.size();
-    printf("\nRecovered %d invalid flags! Which are :\n",tmp);
+    printf("Recovered %d invalid flags!\n",tmp);
     for(int i=0,id=0;i<num_of_flags;i++){
         if(i!=forbidden.front())
             llvm_pass[id++] = llvm_pass[i];
         else{
-            printf("\t-%s\n",llvm_pass[forbidden.front()].c_str());
+            //printf("\t-%s\n",llvm_pass[forbidden.front()].c_str());
             forbidden.pop();
         }
     }
@@ -511,7 +532,6 @@ void GA::replacePopulation ()
 
 void GA::oneRun (bool output)
 {
-    int i;
     infeasible = 0;
     time_t start,end;
     time(&start);
@@ -528,9 +548,11 @@ void GA::oneRun (bool output)
 
     getAllFitness();
 
+    time(&end);
+
     double max = -DBL_MAX;
     stFitness.reset ();
-    for (i = 0; i < nCurrent; i++) {
+    for (int i = 0; i < nCurrent; i++) {
         double fitness = population[i].getFitness ();
         if (fitness > max) {
             max = fitness;
@@ -539,8 +561,6 @@ void GA::oneRun (bool output)
         infeasible += (!fitness)?1:0;
         stFitness.record (fitness);
     }
-
-    time(&end);
 
     elapsed = difftime(end,start);
     // printf("Elapsed time: %.2f seconds\n", difftime(end,start));
@@ -555,10 +575,27 @@ void GA::oneRun (bool output)
 int GA::doIt (bool output)
 {
     generation = 0;
+    infeasible = 0;
 
     printf("----------- Initialization -----------\n");
+    time_t start,end;
+    time(&start);
     getAllFitness();
-    printf("\n\n");
+    time(&end);
+    double max = -DBL_MAX;
+    stFitness.reset ();
+    for (int i = 0; i < nCurrent; i++) {
+        double fitness = population[i].getFitness ();
+        if (fitness > max) {
+            max = fitness;
+            bestIndex = i;
+        }
+        infeasible += (!fitness)?1:0;
+        stFitness.record (fitness);
+    }
+    elapsed = difftime(end,start);
+    showStatistics ();
+
 
     while (!shouldTerminate ()) {
         oneRun (output);
