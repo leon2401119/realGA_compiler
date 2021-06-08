@@ -19,7 +19,7 @@ extern string target_opt;
 extern string target_bin;
 double base_exec_time;
 
-int num_of_flags = 272;
+int num_of_flags = 272; // 271 + 1 null pass
 string llvm_pass[] = {
     "aa",
     "aa-eval",

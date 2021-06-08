@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 #include <float.h>
 #include <math.h>
 #include <time.h>
@@ -13,9 +14,11 @@
 #include "myrand.h"
 #include "ga.h"
 #include <vector>
+#include <queue>
 #include <pthread.h>
 
 extern int num_of_flags;
+extern std::string llvm_pass[];
 extern double base_exec_time;
 
 void* runner(void*);
@@ -79,8 +82,17 @@ double n_pm, int n_maxGen, int n_maxFe)
     printf("Measuring base performance... \n");
     fflush(NULL);
     base_exec_time = base->getFitness(1,5);
-    printf("\nDONE!\n\n");
+
+    /* test the flags one by one and eliminate infeasible ones */
+    FILE* p;
+    int temp;
+    p = fopen ("invalid_indexes","r");
+    temp = p? restore_flags(p):test_flags(p,base);
+    num_of_flags -= temp;
     delete base;
+    /* end test */
+
+    printf("\nDONE!\n\n");
 
     population = new Chromosome[nInitial];
     offspring = new Chromosome[nInitial];
@@ -92,6 +104,57 @@ double n_pm, int n_maxGen, int n_maxFe)
     }
 
     initializePopulation ();
+}
+
+int GA::test_flags(FILE* p, Chromosome* base){
+    std::queue<int> forbidden;
+    Chromosome *tester = base;
+    double exec_time;
+    int temp;
+    for(int i=0;i<num_of_flags-1;i++){
+        tester->setVal(0,i+1);
+        printf("\rTesting flag %d of %d...",i+1,num_of_flags-1);
+        fflush(NULL);
+        exec_time = tester->getFitness(1,1);
+        if(!exec_time)
+            forbidden.push(i);
+    }
+
+    p = fopen ("invalid_indexes","w");
+    temp = forbidden.size();
+    printf("\nDetected %d invalid flags! Which are :\n",temp);
+    for(int i=0,id=0;i<num_of_flags;i++){
+        if(i!=forbidden.front())
+            llvm_pass[id++] = llvm_pass[i];
+        else{
+            fprintf(p,"%d\n",forbidden.front());
+            printf("\t-%s\n",llvm_pass[forbidden.front()].c_str());
+            forbidden.pop();
+        }
+    }
+    fclose(p);
+    return temp;
+}
+
+int GA::restore_flags(FILE* p){
+    std::queue<int> forbidden;
+    int tmp;
+    while(fscanf(p,"%d",&tmp)!=EOF){
+        forbidden.push(tmp);
+    }
+    fclose(p);
+
+    tmp = forbidden.size();
+    printf("\nRecovered %d invalid flags! Which are :\n",tmp);
+    for(int i=0,id=0;i<num_of_flags;i++){
+        if(i!=forbidden.front())
+            llvm_pass[id++] = llvm_pass[i];
+        else{
+            printf("\t-%s\n",llvm_pass[forbidden.front()].c_str());
+            forbidden.pop();
+        }
+    }
+    return tmp;
 }
 
 
@@ -285,8 +348,8 @@ void GA::crossover ()
 void GA::pairwiseXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
 {
     if (myRand.uniform () < pc) {
-    flatXO(p1, p2, c1, c2);
-	//onePointXO (p1, p2, c1, c2);
+    //flatXO(p1, p2, c1, c2);
+	onePointXO (p1, p2, c1, c2);
     //uniformXO (p1, p2, c1, c2, 0.5);
     }
     else {

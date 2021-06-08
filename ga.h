@@ -23,6 +23,8 @@ class GA
         void init (int n_ell, int n_nInitial, int n_selectionPressure, double n_pc,
             double n_pm, int n_maxGen, int n_maxFe);
 
+        int test_flags(FILE*,Chromosome*);
+        int restore_flags(FILE*);
         void initializePopulation ();
         void evaluate ();
 
@@ -32,22 +34,22 @@ class GA
         /** tournament selection without replacement */
         void tournamentSelection ();
 
-	/** Roulette wheel selection */
-	void rwSelection ();
+	    /** Roulette wheel selection */
+	    void rwSelection ();
 
         void crossover ();
         void pairwiseXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
-	void onePointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+	    void onePointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         void uniformXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &, double);
 
-         void arithmaticalXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+        void arithmaticalXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         void extendedXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         void flatXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         void BLXXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         //void SPXXO (Vector<int>parentList, Chromosome &, Chromosome &);
         void mutation ();
         void simpleMutation ();
-	void mutationClock ();
+	    void mutationClock ();
 
         void replacePopulation ();
 
