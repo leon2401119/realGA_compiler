@@ -19,6 +19,7 @@ using namespace std;
 
 string target_cpp, target_file, target_src, target_opt, target_bin;
 
+extern double base_exec_time, O3_exec_time;
 extern char* bash_exec(string, bool);
 
 int main (int argc, char *argv[])
@@ -78,8 +79,9 @@ int main (int argc, char *argv[])
         else
             usedGen = ga.doIt (false);
 
-        Chromosome ch(ell);
-        if (ga.stFitness.getMax() < ch.getMaxFitness()) {
+        //Chromosome ch(ell);
+        //if (ga.stFitness.getMax() < ch.getMaxFitness()) {
+        if (ga.stFitness.getMax() < base_exec_time/O3_exec_time) {
             printf ("-");
             failNum++;
             stGenF.record (usedGen);
