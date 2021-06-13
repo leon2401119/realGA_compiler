@@ -81,11 +81,11 @@ double n_pm, int n_maxGen, int n_maxFe)
         base->setVal(i,0);  // empty pass
 
     /* test the flags one by one and eliminate infeasible ones */
-    FILE* p;
+    /*FILE* p;
     int temp;
     p = fopen ("invalid_indexes","r");
     temp = p? restore_flags(p):test_flags(p,base);
-    num_of_flags -= temp;
+    num_of_flags -= temp;*/
     /* end test */
 
     // measure comparative exec time
@@ -115,6 +115,20 @@ double n_pm, int n_maxGen, int n_maxFe)
 
     printf("\nDONE!\n\n");
 
+    /*population = new Chromosome[nInitial];
+    offspring = new Chromosome[nInitial];
+    selectionIndex = new int[nInitial];
+
+    for (i = 0; i < nInitial; i++) {
+        population[i].init (ell);
+        offspring[i].init (ell);
+    }
+
+    initializePopulation ();*/
+
+    ell = 3;
+    nInitial = num_of_flags * num_of_flags * num_of_flags;
+    nCurrent = nInitial;
     population = new Chromosome[nInitial];
     offspring = new Chromosome[nInitial];
     selectionIndex = new int[nInitial];
@@ -181,6 +195,7 @@ int GA::restore_flags(FILE* p){
 
 void GA::initializePopulation ()
 {
+    /*
     int i, j;
     double p = 0.5;
 
@@ -188,6 +203,15 @@ void GA::initializePopulation ()
         for (j = 0; j < ell; j++)
             population[i].setVal (j, myRand.uniformInt(0, num_of_flags-1));
 
+    */
+    int pop_size = nCurrent;
+    for(int i=0;i<pop_size;i++){
+        int tmp = i;
+        for(int j=2;j>=0;j--){
+            population[i].setVal(j,tmp%num_of_flags);
+            tmp/=num_of_flags;
+        }
+    }
 }
 
 struct args4thread{
@@ -203,7 +227,7 @@ void* runner(void* arg){
 }
 
 void GA::getAllFitness(){
-    int num_workers = 10;
+    int num_workers = 6;
     pthread_t* workers = new pthread_t[num_workers];
 
     /* create placeholder for args to pass into thread */
@@ -220,10 +244,11 @@ void GA::getAllFitness(){
             pthread_create(&(workers[j]),NULL,&runner,(void*)&(args[j]));
         }
         for(int j=0;j<num_workers;j++){
-            if(!((i*num_workers+j)%(nCurrent/100))){
+            /*if(!((i*num_workers+j)%(nCurrent/100))){
                 printf("\rEvaluating generation... %d%%", (int)(100.0*(i*num_workers+j)/nCurrent));
-                fflush(NULL);
-            }
+            }*/
+            printf("\rEvaluating %d of %d", i*num_workers+j,nCurrent);
+            fflush(NULL);
             pthread_join(workers[j],NULL);
         }
     }
@@ -231,7 +256,8 @@ void GA::getAllFitness(){
         args[i].c = &population[nCurrent-1-i];
         pthread_create(&(workers[i]),NULL,&runner,(void*)&(args[i]));
     }
-    printf("\rEvaluating generation... 100%%\n");
+    //printf("\rEvaluating generation... 100%%\n");
+    printf("\n");
     for(int i=0;i<nCurrent%num_workers;i++)
         pthread_join(workers[i],NULL);
 
@@ -596,10 +622,11 @@ int GA::doIt (bool output)
     elapsed = difftime(end,start);
     showStatistics ();
 
-
+    /*
     while (!shouldTerminate ()) {
         oneRun (output);
     }
+    */
     return generation;
 }
 

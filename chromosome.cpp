@@ -20,281 +20,75 @@ extern string target_bin;
 double base_exec_time;
 double O3_exec_time;
 
-int num_of_flags = 272; // 271 + 1 null pass
+int num_of_flags = 38 + 1; // 1 null pass
 string llvm_pass[] = {
-    "aa",
-    "aa-eval",
-    "adce",
-    "add-discriminators",
-    "aggressive-instcombine",
-    "alignment-from-assumptions",
-    "alloca-hoisting",
-    "always-inline",
-    "amode-opt",
     "argpromotion",
-    "asan",
     "asan-globals-md",
-    "asan-module",
-    "assumption-cache-tracker",
-    "atomic-expand",
-    "attributor",
-    "barrier",
-    "basicaa",
-    "basiccg",
-    "bdce",
-    "block-freq",
-    "bool-ret-to-int",
-    "bounds-checking",
-    "bpf-abstract-member-access",
-    "bpf-mi-trunc-elim",
-    "bpf-mi-zext-elim",
-    "branch-prob",
-    "break-crit-edges",
-    "called-value-propagation",
-    "callsite-splitting",
-    "canonicalize-aliases",
-    "cfl-anders-aa",
-    "cfl-steens-aa",
-    "check-debugify",
-    "check-debugify-function",
-    "chr",
     "codegenprepare",
-    "consthoist",
-    "constmerge",
     "constprop",
-    "coro-cleanup",
-    "coro-early",
-    "coro-elide",
-    "coro-split",
-    "correlated-propagation",
-    "cost-model",
-    "cross-dso-cfi",
-    "cseinfo",
-    "da",
-    "dce",
-    "deadargelim",
-    "deadarghaX0r",
-    "debugify",
-    "debugify-function",
-    "delinearize",
-    "demanded-bits",
-    "dfsan",
-    "die",
-    "div-rem-pairs",
-    "divergence",
-    "domfrontier",
-    "domtree",
-    "dse",
-    "dwarfehprepare",
     "early-cse",
     "early-cse-memssa",
-    "edge-bundles",
-    "ee-instrument",
-    "elim-avail-extern",
-    "expand-reductions",
-    "expandmemcmp",
-    "external-aa",
-    "extract-blocks",
     "flattencfg",
-    "float2int",
-    "forceattrs",
     "functionattrs",
-    "generic-to-nvvm",
-    "gisel-known-bits",
     "global-merge",
-    "globaldce",
     "globalopt",
-    "globals-aa",
     "globalsplit",
-    "guard-widening",
     "gvn",
-    "gvn-hoist",
-    "gvn-sink",
     "hardware-loops",
-    "hotcoldsplit",
-    "hwasan",
-    "hwloops",
-    "indirectbr-expand",
-    "indvars",
-    "infer-address-spaces",
     "inferattrs",
-    "inject-tli-mappings",
-    "inline",
-    "insert-gcov-profiling",
     "instcombine",
-    "instcount",
-    "instnamer",
-    "instrorderfile",
-    "instrprof",
-    "instsimplify",
-    "interleaved-access",
     "interleaved-load-combine",
-    "intervals",
-    "ipconstprop",
     "ipsccp",
-    "irce",
-    "irtranslator",
-    "iv-users",
-    "jump-threading",
-    "lazy-block-freq",
-    "lazy-branch-prob",
-    "lazy-value-info",
     "lcssa",
     "lcssa-verification",
-    "legalizer",
-    "libcalls-shrinkwrap",
     "licm",
-    "lint",
-    "liveintervals",
-    "liveregmatrix",
-    "load-store-vectorizer",
-    "localizer",
-    "loop-accesses",
-    "loop-data-prefetch",
-    "loop-deletion",
-    "loop-distribute",
-    "loop-extract",
-    "loop-extract-single",
-    "loop-fusion",
-    "loop-guard-widening",
-    "loop-idiom",
-    "loop-instsimplify",
-    "loop-interchange",
-    "loop-load-elim",
-    "loop-predication",
-    "loop-reduce",
-    "loop-reroll",
-    "loop-rotate",
-    "loop-simplify",
     "loop-simplifycfg",
-    "loop-sink",
     "loop-unroll",
-    "loop-unroll-and-jam",
     "loop-unswitch",
     "loop-vectorize",
-    "loop-versioning",
-    "loop-versioning-licm",
-    "loops",
     "lower-constant-intrinsics",
-    "lower-expect",
-    "lower-guard-intrinsic",
-    "lower-matrix-intrinsics",
     "lower-widenable-condition",
-    "loweratomic",
-    "lowerinvoke",
-    "lowerswitch",
-    "lowertypetests",
-    "make-guards-explicit",
     "mem2reg",
-    "memcpyopt",
-    "memdep",
-    "memoryssa",
-    "mergefunc",
-    "mergeicmps",
-    "mergereturn",
-    "micromips-reduce-size",
-    "mldst-motion",
-    "module-debuginfo",
-    "module-summary-analysis",
-    "msan",
-    "mve-gather-scatter-lowering",
-    "mve-tail-predication",
-    "name-anon-globals",
-    "nary-reassociate",
-    "newgvn",
-    "nvvm-intr-range",
-    "nvvm-reflect",
-    "opt-remark-emitter",
-    "pa-eval",
-    "partial-inliner",
-    "partially-inline-libcalls",
-    "pgo-icall-prom",
-    "pgo-instr-gen",
-    "pgo-instr-use",
-    "pgo-memop-opt",
-    "phi-values",
-    "place-backedge-safepoints-impl",
-    "place-safepoints",
-    "polly-ast",
     "polly-canonicalize",
-    "polly-cleanup",
-    "polly-codegen",
-    "polly-dce",
-    "polly-delicm",
-    "polly-dependences",
-    "polly-detect",
-    "polly-dump-module",
-    "polly-export-jscop",
-    "polly-flatten-schedule",
-    "polly-function-dependences",
-    "polly-function-scops",
-    "polly-import-jscop",
-    "polly-mse",
-    "polly-opt-isl",
     "polly-optree",
     "polly-prepare",
-    "polly-prune-unprofitable",
-    "polly-rewrite-byref-params",
-    "polly-scop-inliner",
-    "polly-scops",
     "polly-simplify",
-    "polyhedral-info",
-    "post-inline-ee-instrument",
-    "postdomtree",
-    "pre-isel-intrinsic-lowering",
-    "profile-summary-info",
     "prune-eh",
-    "reaching-deps-analysis",
-    "reassociate",
-    "redundant-dbg-inst-elim",
     "reg2mem",
-    "regions",
-    "rewrite-statepoints-for-gc",
-    "rewrite-symbols",
-    "rpo-functionattrs",
-    "safe-stack",
-    "sample-profile",
-    "sancov",
-    "scalar-evolution",
-    "scalarize-masked-mem-intrin",
-    "scalarizer",
-    "sccp",
-    "scev-aa",
-    "scoped-noalias",
-    "separate-const-offset-from-gep",
-    "sjljehprepare",
     "slp-vectorizer",
-    "slsr",
-    "speculative-execution",
     "sroa",
-    "stack-safety",
-    "stack-safety-local",
-    "stack-tagging",
-    "strip",
-    "strip-dead-debug-info",
-    "strip-dead-prototypes",
-    "strip-debug-declare",
-    "strip-gc-relocates",
-    "strip-nondebug",
-    "strip-nonlinetable-debuginfo",
-    "structurizecfg",
-    "t2-reduce-size",
     "tailcallelim",
     "tbaa",
-    "transform-warning",
-    "tsan",
     "tti",
-    "type-promotion",
-    "unreachableblockelim",
-    "vec-merger",
-    "verify",
-    "verify-safepoint-ir",
-    "virtregmap",
-    "wholeprogramdevirt",
-    "winehprepare",
-    "write-bitcode"
 };
 
+char* bash_exec(string cmd, bool retrieve_output)
+{
+    FILE* pipe = popen(cmd.c_str(),"r");
+    if(!pipe){
+        printf("popen failed to exec\n");
+    }
+
+    if(retrieve_output){
+        char* output = new char[256];
+        char c;
+        int index = 0;
+        while(c = fgetc(pipe)){
+            if(c == EOF || index==255)
+                break;
+            output[index++] = c;
+        }
+        output[index] = '\0';
+        fclose(pipe);
+        /*if(strlen(output)){
+            cout << '\a';   // beep beep i'm a sheep
+        }*/
+        return output;
+    }
+
+    fclose(pipe);
+    return NULL;
+}
 
 Chromosome::Chromosome ()
 {
@@ -366,6 +160,14 @@ double Chromosome::evaluate (int worker_id, int repeat)
 {
     evaluated = true;
     double d = eval_flag(worker_id, repeat);
+    if(d>1.1){
+        /*std::printf("found\n");
+        fflush(NULL);*/
+        string cmd = "echo ";
+        cmd += (to_string(gene[0]) + " " + to_string(gene[1]) + " " + to_string(gene[2]));
+        cmd += " >>subseq";
+        bash_exec(cmd,false);
+    }
     return d;
 }
 
@@ -380,34 +182,6 @@ double Chromosome::oneMax () const
         result += gene[i];
 
     return result;
-}
-
-char* bash_exec(string cmd, bool retrieve_output)
-{
-    FILE* pipe = popen(cmd.c_str(),"r");
-    if(!pipe){
-        printf("popen failed to exec\n");
-    }
-
-    if(retrieve_output){
-        char* output = new char[256];
-        char c;
-        int index = 0;
-        while(c = fgetc(pipe)){
-            if(c == EOF || index==255)
-                break;
-            output[index++] = c;
-        }
-        output[index] = '\0';
-        fclose(pipe);
-        /*if(strlen(output)){
-            cout << '\a';   // beep beep i'm a sheep
-        }*/
-        return output;
-    }
-
-    fclose(pipe);
-    return NULL;
 }
 
 double str2double(char* str){       // this is essentially atof, fuck me
