@@ -43,7 +43,8 @@ class GA
         void extendedXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         void flatXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         void BLXXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
-        //void SPXXO (Vector<int>parentList, Chromosome &, Chromosome &);
+        void SPXXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+        void simplifycfgXO(const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         void mutation ();
         void simpleMutation ();
 	void mutationClock ();
