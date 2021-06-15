@@ -15,6 +15,7 @@
 #include "ga.h"
 #include <vector>
 #include <queue>
+#include <algorithm>
 #include <pthread.h>
 
 extern int num_of_flags;
@@ -24,6 +25,7 @@ extern double O3_exec_time;
 extern std::string target_cpp;
 int ell_global;
 int workers_global;
+int cfg = 242;  // remember to +1 for null pass
 
 void* runner(void*);
 double str2double(char*);
@@ -168,16 +170,20 @@ int GA::test_flags(FILE* p, Chromosome* base){
     p = fopen ("invalid_indexes","w");
     temp = forbidden.size();
     printf("\nDetected %d invalid flags! Which are :\n",temp);
+    int adj = 0;
     for(int i=0,id=0;i<num_of_flags;i++){
         if(i!=forbidden.front())
             llvm_pass[id++] = llvm_pass[i];
         else{
             fprintf(p,"%d\n",forbidden.front());
             printf("\t-%s\n",llvm_pass[forbidden.front()].c_str());
+            if(forbidden.front()+1<cfg)
+                adj++;
             forbidden.pop();
         }
     }
     fclose(p);
+    cfg -= adj;
     return temp;
 }
 
@@ -191,14 +197,19 @@ int GA::restore_flags(FILE* p){
 
     tmp = forbidden.size();
     printf("Recovered %d invalid flags!\n",tmp);
+    int adj = 0;
     for(int i=0,id=0;i<num_of_flags;i++){
-        if(i!=forbidden.front())
+        if(i!=forbidden.front()){
             llvm_pass[id++] = llvm_pass[i];
+        }
         else{
             //printf("\t-%s\n",llvm_pass[forbidden.front()].c_str());
+            if(forbidden.front()+1<cfg)
+                adj++;
             forbidden.pop();
         }
     }
+    cfg -= adj;
     return tmp;
 }
 
@@ -209,8 +220,12 @@ void GA::initializePopulation ()
     double p = 0.5;
 
     for (i = 0; i < nInitial; i++)
-        for (j = 0; j < ell; j++)
-            population[i].setVal (j, myRand.uniformInt(0, num_of_flags-1));
+        for (j = 0; j < ell; j++){
+            if(!(rand()%7))     // insert simplifycfg between subseqs with mean length of 6
+                population[i].setVal (j, cfg);
+            else
+                population[i].setVal (j, myRand.uniformInt(0, num_of_flags-1));
+        }
 
     /*
     int pop_size = nCurrent;
@@ -415,21 +430,59 @@ void GA::pairwiseXO (const Chromosome & p1, const Chromosome & p2, Chromosome & 
     }
 }
 
-void GA::onePointXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
+void GA::onePointXO(const Chromosome &p1, const Chromosome &p2, Chromosome &c1, Chromosome &c2)
 {
     int i;
-    int crossSite = myRand.uniformInt(1, ell-1);
+    int crossSite = myRand.uniformInt(1, ell - 1);
 
-    for (i = 0; i < crossSite; i++) {
-            c1.setVal (i, p1.getVal(i));
-            c2.setVal (i, p2.getVal(i));
+    while (p1.getVal(crossSite) == cfg || p2.getVal(crossSite) == cfg)
+        crossSite = myRand.uniformInt(1, ell - 1);
+
+    for (i = 0; i < crossSite; i++)
+    {
+        c1.setVal(i, p1.getVal(i));
+        c2.setVal(i, p2.getVal(i));
     }
 
-    for (i = crossSite; i < ell; i++) {
-            c1.setVal (i, p2.getVal(i));
-            c2.setVal (i, p1.getVal(i));
+    for (i = crossSite; i < ell; i++)
+    {
+        c1.setVal(i, p2.getVal(i));
+        c2.setVal(i, p1.getVal(i));
     }
 }
+
+void GA::nPointXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
+{
+    int i, j;
+    int * crossSite = new int[nCurrent + 1];
+    crossSite[0] = 0;
+    for(i = 1; i <= nCurrent; i++){
+        crossSite[i] = myRand.uniformInt(1, ell - 1);
+        while (p1.getVal(crossSite[i]) == cfg || p2.getVal(crossSite[i]) == cfg)
+            crossSite[i] = myRand.uniformInt(1, ell - 1);
+    }
+    std::sort(crossSite + 1, crossSite + nCurrent+1);
+    for (j = 0; j < nCurrent - 2; j+=2)
+    {
+        if (j % 2 == 0)
+        {
+            for (i = crossSite[j]; i <= crossSite[j + 1]; i++)
+            {
+                c1.setVal (i, p1.getVal(i));
+                c2.setVal (i, p2.getVal(i));
+            }
+        }
+        else
+        {
+            for (i = crossSite[j]; i <= crossSite[j + 1]; i++)
+            {
+                c1.setVal (i, p2.getVal(i));
+                c2.setVal (i, p1.getVal(i));
+            }
+        }
+    }
+}
+
 void GA::arithmaticalXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
 {
     

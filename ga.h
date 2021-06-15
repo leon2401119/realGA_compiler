@@ -40,6 +40,7 @@ class GA
         void crossover ();
         void pairwiseXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
 	    void onePointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
+	    void nPointXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
         void uniformXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &, double);
 
         void arithmaticalXO (const Chromosome &, const Chromosome &, Chromosome &, Chromosome &);
