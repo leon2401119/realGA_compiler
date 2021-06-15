@@ -22,6 +22,8 @@ extern std::string llvm_pass[];
 extern double base_exec_time;
 extern double O3_exec_time;
 extern std::string target_cpp;
+int ell_global;
+int workers_global;
 
 void* runner(void*);
 double str2double(char*);
@@ -81,11 +83,11 @@ double n_pm, int n_maxGen, int n_maxFe)
         base->setVal(i,0);  // empty pass
 
     /* test the flags one by one and eliminate infeasible ones */
-    /*FILE* p;
+    FILE* p;
     int temp;
     p = fopen ("invalid_indexes","r");
     temp = p? restore_flags(p):test_flags(p,base);
-    num_of_flags -= temp;*/
+    num_of_flags -= temp;
     /* end test */
 
     // measure comparative exec time
@@ -97,6 +99,11 @@ double n_pm, int n_maxGen, int n_maxFe)
     base->setVal(0,0);
     base_exec_time = base->getFitness(1,star_repeat);
     delete base;
+
+    /* adaptive ell and nInitial */
+    double d = 1000.0/base_exec_time;
+    nInitial = (d>2000.0)?2000:(d>1000.0)?1000:(d>600.0)?600:(d>400.0)?400:(d>200.0)?200:100;
+    ell = std::sqrt(nInitial)*0.66;
 
     /* test O3 */
     char *out;
@@ -115,20 +122,6 @@ double n_pm, int n_maxGen, int n_maxFe)
 
     printf("\nDONE!\n\n");
 
-    /*population = new Chromosome[nInitial];
-    offspring = new Chromosome[nInitial];
-    selectionIndex = new int[nInitial];
-
-    for (i = 0; i < nInitial; i++) {
-        population[i].init (ell);
-        offspring[i].init (ell);
-    }
-
-    initializePopulation ();*/
-
-    ell = 3;
-    nInitial = num_of_flags * num_of_flags * num_of_flags;
-    nCurrent = nInitial;
     population = new Chromosome[nInitial];
     offspring = new Chromosome[nInitial];
     selectionIndex = new int[nInitial];
@@ -139,6 +132,23 @@ double n_pm, int n_maxGen, int n_maxFe)
     }
 
     initializePopulation ();
+
+    /* below is for data gathering */
+    /*ell = 5;
+    ell_global = ell;
+    nInitial = 1000000;
+    nCurrent = nInitial;
+    population = new Chromosome[nInitial];
+    offspring = new Chromosome[nInitial];
+    selectionIndex = new int[nInitial];
+
+    for (i = 0; i < nInitial; i++) {
+        population[i].init (ell);
+        offspring[i].init (ell);
+    }
+
+    initializePopulation ();*/
+    /* end of data gathering section */
 }
 
 int GA::test_flags(FILE* p, Chromosome* base){
@@ -195,7 +205,6 @@ int GA::restore_flags(FILE* p){
 
 void GA::initializePopulation ()
 {
-    /*
     int i, j;
     double p = 0.5;
 
@@ -203,7 +212,7 @@ void GA::initializePopulation ()
         for (j = 0; j < ell; j++)
             population[i].setVal (j, myRand.uniformInt(0, num_of_flags-1));
 
-    */
+    /*
     int pop_size = nCurrent;
     for(int i=0;i<pop_size;i++){
         int tmp = i;
@@ -212,6 +221,7 @@ void GA::initializePopulation ()
             tmp/=num_of_flags;
         }
     }
+    */
 }
 
 struct args4thread{
@@ -227,7 +237,7 @@ void* runner(void* arg){
 }
 
 void GA::getAllFitness(){
-    int num_workers = 6;
+    int num_workers = workers_global;
     pthread_t* workers = new pthread_t[num_workers];
 
     /* create placeholder for args to pass into thread */
@@ -244,10 +254,10 @@ void GA::getAllFitness(){
             pthread_create(&(workers[j]),NULL,&runner,(void*)&(args[j]));
         }
         for(int j=0;j<num_workers;j++){
-            /*if(!((i*num_workers+j)%(nCurrent/100))){
+            if(!((i*num_workers+j)%(nCurrent/100))){
                 printf("\rEvaluating generation... %d%%", (int)(100.0*(i*num_workers+j)/nCurrent));
-            }*/
-            printf("\rEvaluating %d of %d", i*num_workers+j,nCurrent);
+            }
+            //printf("\rEvaluating %d of %d", i*num_workers+j,nCurrent);
             fflush(NULL);
             pthread_join(workers[j],NULL);
         }
@@ -256,7 +266,7 @@ void GA::getAllFitness(){
         args[i].c = &population[nCurrent-1-i];
         pthread_create(&(workers[i]),NULL,&runner,(void*)&(args[i]));
     }
-    //printf("\rEvaluating generation... 100%%\n");
+    printf("\rEvaluating generation... 100%%\n");
     printf("\n");
     for(int i=0;i<nCurrent%num_workers;i++)
         pthread_join(workers[i],NULL);
@@ -622,11 +632,11 @@ int GA::doIt (bool output)
     elapsed = difftime(end,start);
     showStatistics ();
 
-    /*
+
     while (!shouldTerminate ()) {
         oneRun (output);
     }
-    */
+
     return generation;
 }
 

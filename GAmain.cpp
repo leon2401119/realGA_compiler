@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <iostream>
 #include <cstdlib>
+#include <cstring>
 
 #include "statistics.h"
 #include "ga.h"
@@ -21,17 +22,85 @@ string target_cpp, target_file, target_src, target_opt, target_bin;
 
 extern double base_exec_time, O3_exec_time;
 extern char* bash_exec(string, bool);
+extern int workers_global;
+
+class args{
+public:
+    /*
+        initialization of ell and nInitial does not matter here since it will be
+        dynamically adjusted according to the time for one fitness eval call by default
+    */
+    args():target(NULL),threads(1),ell(10),nInitial(1000),selectionPressure(2),pc(1.0),pm(0.0),maxGen(3),maxFe(-1),repeat(1),lock_ell(false),lock_nInitial(false){};
+    char* target;
+    int threads;
+    int ell;
+    int nInitial;
+    int selectionPressure;
+    double pc;
+    double pm;
+    int maxGen;
+    int maxFe;
+    int repeat;
+    bool lock_ell;
+    bool lock_nInitial;
+};
+
+args argparser(int argc, char* argv[]){
+    if(argc < 2){
+        printf("Usage: GAPO [FILE]... [OPTION]...\n");
+    }
+    struct args main_args;
+    main_args.target = argv[1];
+    for(int i=2;i<argc;i++){
+        if(!strcmp(argv[i],"--help") || !strcmp(argv[i],"-h")){
+            printf("Usage: GAPO [FILE]... [OPTION]...\nOptions: len, popsize, sp, pc, pm, gen, nfe, threads, repeat\n");
+            exit(0);
+        }
+        else if(!strcmp(argv[i],"--threads")){
+            main_args.threads = atoi(argv[++i]);
+        }
+        else if(!strcmp(argv[i],"--len")){
+            main_args.ell = atoi(argv[++i]);
+            main_args.lock_ell = true;
+        }
+        else if(!strcmp(argv[i],"--popsize")){
+            main_args.nInitial = atoi(argv[++i]);
+            main_args.lock_nInitial = true;
+        }
+        else if(!strcmp(argv[i],"--sp")){
+            main_args.selectionPressure = atoi(argv[++i]);
+        }
+        else if(!strcmp(argv[i],"--pc")){
+            main_args.pc = atof(argv[++i]);
+        }
+        else if(!strcmp(argv[i],"--pm")){
+            main_args.pm = atof(argv[++i]);
+        }
+        else if(!strcmp(argv[i],"--gen")){
+            main_args.maxGen = atoi(argv[++i]);
+        }
+        else if(!strcmp(argv[i],"--nfe")){
+            main_args.maxFe = atoi(argv[++i]);
+        }
+        else if(!strcmp(argv[i],"--repeat")){
+            main_args.repeat = atoi(argv[++i]);
+        }
+        else{
+            printf("Unknown argument \"%s\"\n",argv[i]);
+            printf("Usage: GAPO [FILE]... [OPTION]...\nOptions: len, popsize, sp, pc, pm, gen, nfe, threads, repeat\n");
+            exit(0);
+        }
+    }
+    return main_args;
+}
 
 int main (int argc, char *argv[])
 {
+    args main_args = argparser(argc,argv);
 
-    if (argc != 10) {
-        printf ("GA src_file ell nInitial selectionPressure pc pm maxGen maxFe repeat\n");
-        return -1;
-    }
     // TODO: check src_file existence
     printf("----------- Preparation -----------\n");
-    char* target = argv[1];
+    char* target = main_args.target;
     FILE *file;
     if (file = fopen(target, "r")) {
         fclose(file);
@@ -52,16 +121,17 @@ int main (int argc, char *argv[])
     fflush(NULL);
     bash_exec(prepare_cmd,false);
 
-    int ell = atoi (argv[2]);    // problem size
+    int ell = main_args.ell;    // problem size
                                  // initial population size
-    int nInitial = atoi (argv[3]);
+    int nInitial = main_args.nInitial;
                                  // selection pressure
-    int selectionPressure = atoi (argv[4]);
-    double pc = atof (argv[5]);  // pc
-    double pm = atof (argv[6]);  // pm
-    int maxGen = atoi (argv[7]); // max generation
-    int maxFe = atoi (argv[8]);  // max fe
-    int repeat = atoi (argv[9]); // how many time to repeat
+    int selectionPressure = main_args.selectionPressure;
+    double pc = main_args.pc;  // pc
+    double pm = main_args.pm;  // pm
+    int maxGen = main_args.maxGen; // max generation
+    int maxFe = main_args.maxFe;  // max fe
+    int repeat = main_args.repeat; // how many time to repeat
+    workers_global = main_args.threads;
 
     int i;
 
