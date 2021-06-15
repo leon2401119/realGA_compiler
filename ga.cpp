@@ -12,6 +12,7 @@
 #include "myrand.h"
 #include "ga.h"
 #include <algorithm>
+#include <vector>
 GA::GA()
 {
     ell = 0;
@@ -244,51 +245,52 @@ void GA::onePointXO(const Chromosome &p1, const Chromosome &p2, Chromosome &c1, 
         c2.setVal(i, p1.getVal(i));
     }
 }
-    
 
-    void GA::nPointXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
+void GA::nPointXO (const Chromosome & p1, const Chromosome & p2, Chromosome & c1, Chromosome & c2)
 
+{
+
+    int i, j;
+
+    int * crossSite = new int[nCurrent + 1];
+
+    crossSite[0] = 0;
+
+    for (i = 1; i <= nCurrent; i++)
     {
 
-        int i, j;
-
-        int * crossSite = new int[nCurrent + 1];
-
-        crossSite[0] = 0;
-
-        for(i = 1; i <= nCurrent; i++){
-
-            crossSite[i] = myRand.uniformInt(1, ell - 1);
-        }
+        crossSite[i] = myRand.uniformInt(1, ell - 1);
+    }
         std::sort(crossSite + 1, crossSite + nCurrent+1)      
 
         for (j = 0; j < nCurrent - 2; j+=2)
         {
 
-        if (j % 2 == 0)
-        {
-
-            for (i = crossSite[j]; i <= crossSite[j + 1]; i++)
+            if (j % 2 == 0)
             {
 
-                c1.setVal (i, p1.getVal(i));
+                for (i = crossSite[j]; i <= crossSite[j + 1]; i++)
+                {
 
-                c2.setVal (i, p2.getVal(i));
+                    c1.setVal (i, p1.getVal(i));
+
+                    c2.setVal (i, p2.getVal(i));
+                }
             }
-        }
-        else
-        {
-
-            for (i = crossSite[j]; i <= crossSite[j + 1]; i++)
+            else
             {
 
-                c1.setVal (i, p2.getVal(i));
+                for (i = crossSite[j]; i <= crossSite[j + 1]; i++)
+                {
 
-                c2.setVal (i, p1.getVal(i));
+                    c1.setVal (i, p2.getVal(i));
+
+                    c2.setVal (i, p1.getVal(i));
+                }
             }
         }
-    }
-    }
+}
+
 void GA::arithmaticalXO(const Chromosome &p1, const Chromosome &p2, Chromosome &c1, Chromosome &c2)
 {
 
@@ -399,6 +401,94 @@ void GA::primeXO(const Chromosome &p1, const Chromosome &p2, Chromosome &c1, Chr
             c2.setVal(i, p2.getVal(i));
         }
     }
+   
+    void GA::simplifycfgXO_p1(const Chromosome &p1, const Chromosome &p2, Chromosome &c1, Chromosome &c2){
+        vector<int>p1_XOpoint_List=new int[1];
+        
+        for (int  = 0; i < ell; i++)
+        {
+            if(p1.getValue(i)==82){
+                //會放入list的代表到i之前的block要保留，從i+1的點開始切
+                p1_XOpoint_List.push_back(i+1);
+            }
+           
+        }
+        //判斷用p1還是用p2的gene，0用p1;1用p2
+        int geneSrc=0;
+        //設定children的gene,index:0~p1_XOpoint_List[0]
+         for (int i = 0; i < p1_XOpoint_List[0]; i++)
+         {
+            if(geneSrc==1){
+                    c1.setVal(i, p2.getVal(i));
+                    c2.setVal(i, p1.getVal(i));
+                    geneSrc=0;
+                }else{
+                    c1.setVal(i, p1.getVal(i));
+                    c2.setVal(i, p2.getVal(i));
+                    geneSrc=1;
+                }
+         }
+         //設定children剩下的gene
+        for (int l = 1; l <p1_XOpoint_List.size(); l++)
+        {        
+             for (int i = p1_XOpoint_List[l-1]; i <=p1_XOpoint_List[l]-1; i++){
+                    if(geneSrc==1){
+                    c1.setVal(i, p2.getVal(i));
+                    c2.setVal(i, p1.getVal(i));
+                    geneSrc=0;
+                }else{
+                    c1.setVal(i, p1.getVal(i));
+                    c2.setVal(i, p2.getVal(i));
+                    geneSrc=1;
+                }
+         
+                }
+           
+          
+        }
+        
+    } 
+    void GA::simplifycfgXO_p2(const Chromosome &p1, const Chromosome &p2, Chromosome &c1, Chromosome &c2){
+        vector<inti>p2_XOpoint_List=new int[1];
+        for (int  = 0; i < ell; i++)
+        {
+            if(p2.getValue(i)==82){
+                //會放入list的代表到i之前的block要保留，從i+1的點開始不一樣
+                p2_XOpoint_List.push_back(i+1);
+            }
+        }
+        int geneSrc=0;
+     //設定children的gene,index:0~p1_XOpoint_List[0]
+         for (int i = 0; i < p2_XOpoint_List[0]; i++)
+         {
+            if(geneSrc==1){
+                    c1.setVal(i, p2.getVal(i));
+                    c2.setVal(i, p1.getVal(i));
+                    geneSrc=0;
+                }else{
+                    c1.setVal(i, p1.getVal(i));
+                    c2.setVal(i, p2.getVal(i));
+                    geneSrc=1;
+                }
+         }
+        for (int l = 1; l <p2_XOpoint_List.size(); l++)
+        {        
+             for (int i = p2_XOpoint_List[l-1]; i <p2_XOpoint_List[l]; i++)
+             {
+                   if(geneSrc==1){
+                    c1.setVal(i, p2.getVal(i));
+                    c2.setVal(i, p1.getVal(i));
+                    geneSrc=0;
+                }else{
+                    c1.setVal(i, p1.getVal(i));
+                    c2.setVal(i, p2.getVal(i));
+                    geneSrc=1;
+                }
+         
+                }    
+        }
+        
+    } 
     void GA::mutation()
     {
         //simpleMutation ();
